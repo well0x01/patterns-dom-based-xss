@@ -1,8 +1,6 @@
 import re
 import requests
 
-import re
-
 def encontrar_xss(source_code):
     highlighted = []
     sources = r'''\b(?:document\.(URL|documentURI|URLUnencoded|baseURI|cookie|referrer)|location\.(href|search|hash|pathname)|window\.name|history\.(pushState|replaceState)(local|session)Storage)\b'''
@@ -10,11 +8,10 @@ def encontrar_xss(source_code):
     scripts = re.findall(r'(?i)(?s)<script[^>]*>(.*?)</script>', source_code)
     sink_found, source_found = False, False
     for script in scripts:
-        script = script.split('\n')
-        num = 1
+        script_lines = script.split('\n')
         all_controlled_variables = set()
         try:
-            for line in script:
+            for line in script_lines:
                 parts = line.split('var ')
                 controlled_variables = set()
                 if len(parts) > 1:
@@ -46,16 +43,14 @@ def encontrar_xss(source_code):
                         if sink:
                             line = line.replace(sink, '\033[31m' + sink + '\033[0m')
                             sink_found = True
-                if line.strip() and line != script[num]:
-                    highlighted.append('%-3s %s' % (str(num), line.lstrip(' ')))
-                num += 1
+                if line.strip():
+                    highlighted.append(line.lstrip(' '))
         except MemoryError:
             pass
     if sink_found or source_found:
         return highlighted
     else:
         return []
-
 
 def main():
     url = input("Digite a URL para analisar DOM-XSS: ")
